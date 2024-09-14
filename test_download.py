@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
+import sys
 import time
 import urllib.request
 import os
@@ -78,7 +79,7 @@ def open_first_photo(driver):
         print(f"Failed to find or click the options button: {e}")
 
 
-def download_opened_image(driver):
+def download_opened_image(driver, file_number):
     """
     Locate download button in the image, find underlying link and download the photo
     """
@@ -89,14 +90,14 @@ def download_opened_image(driver):
         )
 
         image_url = download_button.get_attribute("href")
-        download_image(image_url)
+        download_image(image_url, file_number=file_number)
         time.sleep(1)
 
     except Exception as e:
         print(f"Failed to find or click the options button: {e}")
 
 
-def download_image(url, folder_path="downloaded_imagesheheh"):
+def download_image(url, file_number, folder_path="downloaded_imagesheheh"):
     """
     Download the image from the given URL and save it.
     """
@@ -112,7 +113,9 @@ def download_image(url, folder_path="downloaded_imagesheheh"):
 
     if response.status_code == 200:
         # Extract the image file name from the URL
-        filename = os.path.basename(urlsplit(url).path)
+        filename = os.path.basename(urlsplit(url).path).split(".")
+        filename = f"{file_number}.{filename[-1]}"
+        # filename = os.path.basename(file_number)
         # Create the full file path
         file_path = os.path.join(folder_path, filename)
 
@@ -150,14 +153,13 @@ open_chat_options(driver)
 open_multimedia_button(driver)
 open_multimedia(driver)
 open_first_photo(driver)
-for _ in range(2):
-    download_opened_image(driver)
-    driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ARROW_RIGHT)
-    time.sleep(1)
-
-
-# Find all images in the chat
-images = driver.find_elements(By.TAG_NAME, "img")
-
-
-driver.quit()
+x = 0
+while True:
+    x += 1
+    try:
+        download_opened_image(driver, str(x))
+        driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ARROW_RIGHT)
+        time.sleep(1)
+    except KeyboardInterrupt:
+        driver.quit()
+        sys.exit
